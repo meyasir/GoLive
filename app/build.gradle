@@ -1,0 +1,40 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        applicationId "com.samirk433.golive"
+        minSdkVersion 16
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:25.0.0'
+    compile 'com.google.apis:google-api-services-youtube:v3-rev182-1.22.0'
+
+    // Google Play services Auth split
+    //compile 'com.google.android.gms:play-services-auth:10.0.0'
+// Google Api Client library and Android extension
+    compile 'com.google.api-client:google-api-client:1.22.0'
+    compile 'com.google.api-client:google-api-client-android:1.22.0'
+// Change to the API you want to access:
+// Below is just an example for People REST API access
+    compile 'com.google.apis:google-api-services-people:v1-rev4-1.22.0'
+
+
+    compile 'com.google.android.gms:play-services-auth:10.0.1'
+
+}
