@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.credentials.Credential;
@@ -33,23 +34,17 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collections;
 
+import utils.Broadcast;
 import utils.MyAuth;
 
 
 public class MainActivity extends FragmentActivity implements View.OnClickListener {
 
-    final int  SIGNIN_REQ_CODE = 420;
+    // TAG for logcat
+    private static final String TAG = MainActivity.class.getName();
 
-
-    /**
-     * Define a global instance of the HTTP transport.
-     */
-    public static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-
-    /**
-     * Define a global instance of the JSON factory.
-     */
-    public static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    // Sign in request code..
+    private static final int  SIGNIN_REQ_CODE = 420;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,22 +63,26 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         switch (id) {
             case R.id.btn_signin:
 
-               GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                //initialize GoogleSignInOptions instance
+                GoogleSignInOptions signInOptions =
+                       new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                        .requestEmail()
                        .requestScopes(new Scope("https://www.googleapis.com/auth/youtube"))
                        .build();
 
-                GoogleApiClient gac = new GoogleApiClient.Builder(this)
+                //initialize GoogleApiClient instance
+                GoogleApiClient apiClient = new GoogleApiClient.Builder(this)
                         .enableAutoManage(this, new GoogleApiClient.OnConnectionFailedListener() {
                             @Override
                             public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+                                Log.d(TAG, "Connection Result Failed.");
                             }
                         })
-                        .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                        .addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions)
                         .build();
 
-                Intent intent = Auth.GoogleSignInApi.getSignInIntent(gac);
+                //initialize Intent for GoogleSignInApi
+                Intent intent = Auth.GoogleSignInApi.getSignInIntent(apiClient);
                 startActivityForResult(intent, SIGNIN_REQ_CODE);
                 break;
         }
@@ -91,39 +90,26 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == SIGNIN_REQ_CODE){
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            if(result.isSuccess()){
-            GoogleSignInAccount acc = result.getSignInAccount();
 
-               check1(acc.getAccount());
+        //Check for SignIn Request code
+        if(requestCode == SIGNIN_REQ_CODE){
+            GoogleSignInResult signInResult =
+                    Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if(signInResult.isSuccess()){
+
+            GoogleSignInAccount account = signInResult.getSignInAccount();
+
+                Broadcast broadcast = new Broadcast(MainActivity.this
+                , account.getAccount());
+                broadcast.start();
 
             } else {
+                Log.d(TAG, "Sign in failed");
+                Toast.makeText(MainActivity.this, "Sign in Failed",
+                        Toast.LENGTH_SHORT).show();
             }
         }
-
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-
-    public void check1(Account acc) {
-
-        try {
-            GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
-                    MainActivity.this,
-                    Collections.singleton(
-                            "https://www.googleapis.com/auth/youtube")
-            );
-            credential.setSelectedAccount(acc);
-
-            YouTube youtube = new YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, new HttpRequestInitializer() {
-                public void initialize(HttpRequest request) throws IOException {
-                }
-            }).setApplicationName("golive-158012").build();
-        }
-        catch(Exception exp){
-            Log.d("Class", exp.getMessage());
-        }
-
-    }
 }

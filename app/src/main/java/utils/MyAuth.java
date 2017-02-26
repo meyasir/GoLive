@@ -1,15 +1,14 @@
 package utils;
 
-import com.google.android.gms.auth.api.Auth;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.common.collect.Lists;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.List;
+import android.accounts.Account;
+import android.content.Context;
+import android.util.Log;
+
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+
+import java.util.Collections;
+
 
 /**
  * Created by Samir KHan on 2/21/2017.
@@ -17,37 +16,40 @@ import java.util.List;
 
 public class MyAuth {
 
-    List<String> scopes;
-    /**
-     * Define a global instance of the JSON factory.
-     */
-    public static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    // TAG for logcat
+    private static final String TAG = MyAuth.class.getName();
 
-    public MyAuth() {
-        scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube");
+    private Context context;
+
+    // instance of User Acccount
+    private Account account;
+
+    /**
+     * Constructor
+     * @param context ->
+     * @param account  -> User account
+     */
+    public MyAuth(Context context, Account account) {
+        this.context = context;
+        this.account = account;
     }
 
-    public void auth() {
-
+    /**
+     * get GoogleAccountCredential instance
+     */
+    public GoogleAccountCredential getCredential() {
         try {
+            GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
+                    context, Collections.singleton(
+                            "https://www.googleapis.com/auth/youtube")
+            );
+            credential.setSelectedAccount(account);
 
-        // Load client secrets.
-        Reader clientSecretReader = new InputStreamReader(MyAuth.class.getResourceAsStream("/client_secrets.json"));
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, clientSecretReader);
-            GoogleClientSecrets gcs = new GoogleClientSecrets();
-
-        // Checks that the defaults have been replaced (Default = "Enter X here").
-        if (clientSecrets.getDetails().getClientId().startsWith("Enter")
-                || clientSecrets.getDetails().getClientSecret().startsWith("Enter ")) {
-            System.out.println(
-                    "Enter Client ID and Secret from https://console.developers.google.com/project/_/apiui/credential "
-                            + "into src/main/resources/client_secrets.json");
-            System.exit(1);
+            return credential;
         }
-    } catch (IOException e) {
-            e.printStackTrace();
+        catch(Exception exp){
+            Log.d(TAG, exp.getMessage());
         }
-
-
+        return null;
     }
 }
